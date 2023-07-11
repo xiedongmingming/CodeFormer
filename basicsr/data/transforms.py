@@ -3,7 +3,8 @@ import random
 
 
 def mod_crop(img, scale):
-    """Mod crop images, used during testing.
+    """
+    Mod crop images, used during testing.
 
     Args:
         img (ndarray): Input image.
@@ -13,17 +14,25 @@ def mod_crop(img, scale):
         ndarray: Result image.
     """
     img = img.copy()
+
     if img.ndim in (2, 3):
+
         h, w = img.shape[0], img.shape[1]
+
         h_remainder, w_remainder = h % scale, w % scale
+
         img = img[:h - h_remainder, :w - w_remainder, ...]
+
     else:
+
         raise ValueError(f'Wrong img ndim: {img.ndim}.')
+
     return img
 
 
 def paired_random_crop(img_gts, img_lqs, gt_patch_size, scale, gt_path):
-    """Paired random crop.
+    """
+    Paired random crop.
 
     It crops lists of lq and gt images with corresponding locations.
 
@@ -44,21 +53,32 @@ def paired_random_crop(img_gts, img_lqs, gt_patch_size, scale, gt_path):
     """
 
     if not isinstance(img_gts, list):
+        #
         img_gts = [img_gts]
+
     if not isinstance(img_lqs, list):
+        #
         img_lqs = [img_lqs]
 
     h_lq, w_lq, _ = img_lqs[0].shape
     h_gt, w_gt, _ = img_gts[0].shape
+
     lq_patch_size = gt_patch_size // scale
 
     if h_gt != h_lq * scale or w_gt != w_lq * scale:
-        raise ValueError(f'Scale mismatches. GT ({h_gt}, {w_gt}) is not {scale}x ',
-                         f'multiplication of LQ ({h_lq}, {w_lq}).')
+        #
+        raise ValueError(
+            f'Scale mismatches. GT ({h_gt}, {w_gt}) is not {scale}x ',
+            f'multiplication of LQ ({h_lq}, {w_lq}).'
+        )
+
     if h_lq < lq_patch_size or w_lq < lq_patch_size:
-        raise ValueError(f'LQ ({h_lq}, {w_lq}) is smaller than patch size '
-                         f'({lq_patch_size}, {lq_patch_size}). '
-                         f'Please remove {gt_path}.')
+        #
+        raise ValueError(
+            f'LQ ({h_lq}, {w_lq}) is smaller than patch size '
+            f'({lq_patch_size}, {lq_patch_size}). '
+            f'Please remove {gt_path}.'
+        )
 
     # randomly choose top and left coordinates for lq patch
     top = random.randint(0, h_lq - lq_patch_size)
@@ -69,16 +89,23 @@ def paired_random_crop(img_gts, img_lqs, gt_patch_size, scale, gt_path):
 
     # crop corresponding gt patch
     top_gt, left_gt = int(top * scale), int(left * scale)
+
     img_gts = [v[top_gt:top_gt + gt_patch_size, left_gt:left_gt + gt_patch_size, ...] for v in img_gts]
+
     if len(img_gts) == 1:
+        #
         img_gts = img_gts[0]
+
     if len(img_lqs) == 1:
+        #
         img_lqs = img_lqs[0]
+
     return img_gts, img_lqs
 
 
 def augment(imgs, hflip=True, rotation=True, flows=None, return_status=False):
-    """Augment: horizontal flips OR rotate (0, 90, 180, 270 degrees).
+    """
+    Augment: horizontal flips OR rotate (0, 90, 180, 270 degrees).
 
     We use vertical flip and transpose for rotation implementation.
     All the images in the list use the same augmentation.
@@ -100,44 +127,69 @@ def augment(imgs, hflip=True, rotation=True, flows=None, return_status=False):
 
     """
     hflip = hflip and random.random() < 0.5
+
     vflip = rotation and random.random() < 0.5
     rot90 = rotation and random.random() < 0.5
 
     def _augment(img):
+
         if hflip:  # horizontal
             cv2.flip(img, 1, img)
         if vflip:  # vertical
             cv2.flip(img, 0, img)
         if rot90:
             img = img.transpose(1, 0, 2)
+
         return img
 
     def _augment_flow(flow):
+
         if hflip:  # horizontal
+
             cv2.flip(flow, 1, flow)
+
             flow[:, :, 0] *= -1
+
         if vflip:  # vertical
+
             cv2.flip(flow, 0, flow)
+
             flow[:, :, 1] *= -1
+
         if rot90:
+            #
             flow = flow.transpose(1, 0, 2)
+
             flow = flow[:, :, [1, 0]]
+
         return flow
 
     if not isinstance(imgs, list):
+        #
         imgs = [imgs]
+
     imgs = [_augment(img) for img in imgs]
+
     if len(imgs) == 1:
+        #
         imgs = imgs[0]
 
     if flows is not None:
+
         if not isinstance(flows, list):
+            #
             flows = [flows]
+
         flows = [_augment_flow(flow) for flow in flows]
+
         if len(flows) == 1:
+            #
             flows = flows[0]
+
         return imgs, flows
+
     else:
+
         if return_status:
             return imgs, (hflip, vflip, rot90)
         else:
@@ -145,7 +197,8 @@ def augment(imgs, hflip=True, rotation=True, flows=None, return_status=False):
 
 
 def img_rotate(img, angle, center=None, scale=1.0):
-    """Rotate image.
+    """
+    Rotate image.
 
     Args:
         img (ndarray): Image to be rotated.
@@ -158,8 +211,11 @@ def img_rotate(img, angle, center=None, scale=1.0):
     (h, w) = img.shape[:2]
 
     if center is None:
+        #
         center = (w // 2, h // 2)
 
     matrix = cv2.getRotationMatrix2D(center, angle, scale)
+
     rotated_img = cv2.warpAffine(img, matrix, (w, h))
+
     return rotated_img
