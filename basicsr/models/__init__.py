@@ -17,14 +17,18 @@ _model_modules = [importlib.import_module(f'basicsr.models.{file_name}') for fil
 
 
 def build_model(opt):
-    """Build model from options.
+    """
+    Build model from options.
 
     Args:
         opt (dict): Configuration. It must constain:
             model_type (str): Model type.
     """
     opt = deepcopy(opt)
+
     model = MODEL_REGISTRY.get(opt['model_type'])(opt)
+
     logger = get_root_logger()
     logger.info(f'Model [{model.__class__.__name__}] is created.')
+
     return model
