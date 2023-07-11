@@ -21,13 +21,18 @@ pretrain_model_url = {
 
 
 def set_realesrgan():
+
     from basicsr.archs.rrdbnet_arch import RRDBNet
     from basicsr.utils.realesrgan_utils import RealESRGANer
 
     use_half = False
-    if torch.cuda.is_available():  # set False in CPU/MPS mode
+
+    if torch.cuda.is_available():  # set False in CPU/MPS modeSS
+
         no_half_gpu_list = ['1650', '1660']  # set False for GPUs that don't support f16
+
         if not True in [gpu in torch.cuda.get_device_name(0) for gpu in no_half_gpu_list]:
+
             use_half = True
 
     model = RRDBNet(
@@ -38,6 +43,7 @@ def set_realesrgan():
         num_grow_ch=32,
         scale=2,
     )
+
     upsampler = RealESRGANer(
         scale=2,
         model_path="https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/RealESRGAN_x2plus.pth",
@@ -49,11 +55,15 @@ def set_realesrgan():
     )
 
     if not gpu_is_available():  # CPU
+
         import warnings
-        warnings.warn('Running on CPU now! Make sure your PyTorch version matches your CUDA.'
+
+        warnings.warn(
+            'Running on CPU now! Make sure your PyTorch version matches your CUDA.'
                       'The unoptimized RealESRGAN is slow on CPU. '
                       'If you want to disable it, please remove `--bg_upsampler` and `--face_upsample` in command.',
                       category=RuntimeWarning)
+
     return upsampler
 
 

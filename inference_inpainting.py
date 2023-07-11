@@ -59,7 +59,9 @@ if __name__ == '__main__':
             #
             args.input_path = args.input_path[:-1]
 
+        #
         # scan all the jpg and png images
+        #
         input_img_list = sorted(glob.glob(os.path.join(args.input_path, '*.[jpJP][pnPN]*[gG]')))
 
         result_root = f'results/{os.path.basename(args.input_path)}'
